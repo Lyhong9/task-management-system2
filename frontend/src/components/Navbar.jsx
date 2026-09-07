@@ -1,8 +1,8 @@
 import React from 'react';
-import { Menu, Plus } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-export const Navbar = ({ onOpenTaskModal, mobileOpen, setMobileOpen }) => {
+export const Navbar = ({ mobileOpen, setMobileOpen }) => {
   const { user } = useAuth();
 
   return (
@@ -24,20 +24,6 @@ export const Navbar = ({ onOpenTaskModal, mobileOpen, setMobileOpen }) => {
             {user?.name || 'User'}
           </span>
         </div>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        {onOpenTaskModal && (
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={onOpenTaskModal}
-            style={{ padding: '8px 14px', fontSize: '13px' }}
-          >
-            <Plus size={16} />
-            <span>New Task</span>
-          </button>
-        )}
       </div>
     </header>
   );
