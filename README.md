@@ -20,7 +20,7 @@ TaskFlow is an enterprise-grade full-stack task management application designed 
 
 | Layer | Technology | Details |
 | :--- | :--- | :--- |
-| **Frontend** | React 19 + Vite | Fast HMR, React Router v7, Lucide Icons, Vanilla CSS design tokens |
+| **Frontend** | React 19 + Vite + Tailwind CSS v4 | Fast HMR, React Router v7, Lucide Icons, Tailwind CSS v4 with dark/light themes |
 | **Backend** | Node.js + Express | RESTful API, Helmet, CORS, Morgan |
 | **Database** | PostgreSQL 18 | Relational persistent database with foreign keys & indexes |
 | **ORM** | Sequelize 6 | CLI migrations, associations, transactions, seeders |
