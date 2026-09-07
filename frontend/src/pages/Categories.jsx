@@ -73,17 +73,9 @@ export const Categories = () => {
     setIsModalOpen(true);
   };
 
-  if (loading) {
-    return <LoadingSpinner text="Loading your categories with TanStack Query..." />;
-  }
-
-  if (error) {
-    return <ErrorState message={error.message || 'Unable to load categories'} onRetry={refetch} />;
-  }
-
   return (
     <div>
-      {/* Header */}
+      {/* Page Header */}
       <div
         style={{
           display: 'flex',
@@ -91,107 +83,132 @@ export const Categories = () => {
           justifyContent: 'space-between',
           flexWrap: 'wrap',
           gap: 16,
-          marginBottom: 28
+          marginBottom: 32
         }}
       >
         <div>
-          <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Categories</h2>
+          <h2 style={{ fontSize: '26px', fontWeight: 800 }}>Categories</h2>
           <p style={{ color: 'var(--text-secondary)', marginTop: 4, fontSize: '14px' }}>
-            Organize tasks into structured projects and groups
+            Organize and classify tasks by departments or project areas
           </p>
         </div>
         <button
           type="button"
           className="btn btn-primary"
           onClick={openCreateModal}
+          id="btn-new-category"
         >
           <Plus size={18} />
           <span>New Category</span>
         </button>
       </div>
 
-      {categories.length === 0 ? (
+      {loading ? (
+        <LoadingSpinner text="Loading categories..." />
+      ) : error ? (
+        <ErrorState message={error.message || 'Unable to load categories'} onRetry={refetch} />
+      ) : categories.length === 0 ? (
         <EmptyState
           icon={FolderTree}
           title="No categories found"
-          description="Create categories like 'Work', 'Personal', or 'Design' to organize your tasks better."
-          action={
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={openCreateModal}
-            >
-              <Plus size={16} /> Create Category
-            </button>
-          }
+          description="Create categories like 'Work', 'Personal', or 'Design' to better organize your tasks."
+          actionText="Create Category"
+          onAction={openCreateModal}
         />
       ) : (
-        <div className="category-grid">
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gap: 20
+          }}
+        >
           {categories.map((cat) => (
-            <div key={cat.id} className="card card-hover category-card">
+            <div
+              key={cat.id}
+              className="card card-hover"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                minHeight: '150px'
+              }}
+              id={`category-card-${cat.id}`}
+            >
+              <div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    gap: 12
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 'var(--radius-md)',
+                        background: 'rgba(99, 102, 241, 0.15)',
+                        color: '#818cf8',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <FolderTree size={20} />
+                    </div>
+                    <h3 style={{ fontSize: '17px', fontWeight: 700 }}>{cat.name}</h3>
+                  </div>
+
+                  <div className="task-actions">
+                    <button
+                      type="button"
+                      className="btn-icon"
+                      onClick={() => openEditModal(cat)}
+                      title="Edit category"
+                      aria-label="Edit category"
+                      id={`btn-edit-category-${cat.id}`}
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-icon"
+                      onClick={() => setDeletingCategory(cat)}
+                      title="Delete category"
+                      aria-label="Delete category"
+                      style={{ color: '#f87171' }}
+                      id={`btn-delete-category-${cat.id}`}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  marginBottom: 16
-                }}
-              >
-                <div
-                  style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: 'var(--radius-md)',
-                    background: 'rgba(99, 102, 241, 0.12)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--primary-400)'
-                  }}
-                >
-                  <FolderTree size={20} />
-                </div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button
-                    type="button"
-                    className="btn-icon"
-                    onClick={() => openEditModal(cat)}
-                    title="Edit category"
-                  >
-                    <Edit2 size={15} />
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-icon text-danger"
-                    onClick={() => setDeletingCategory(cat)}
-                    title="Delete category"
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </div>
-              </div>
-
-              <h3 style={{ fontSize: '17px', fontWeight: 700, marginBottom: 8 }}>
-                {cat.name}
-              </h3>
-
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
+                  borderTop: '1px solid var(--border-subtle)',
+                  paddingTop: 14,
+                  marginTop: 18,
                   fontSize: '13px',
-                  color: 'var(--text-muted)'
+                  color: 'var(--text-secondary)'
                 }}
               >
-                <CheckSquare size={14} />
-                <span>ID: #{cat.id}</span>
-                <span>•</span>
-                <span>
-                  {new Date(cat.createdAt).toLocaleDateString(undefined, {
-                    month: 'short',
-                    day: 'numeric'
-                  })}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <CheckSquare size={16} color="#818cf8" />
+                  <span>
+                    <strong>{cat.taskCount !== undefined ? cat.taskCount : 0}</strong>{' '}
+                    {cat.taskCount === 1 ? 'Task' : 'Tasks'}
+                  </span>
+                </div>
+                <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
+                  {new Date(cat.createdAt).toLocaleDateString()}
                 </span>
               </div>
             </div>
@@ -199,7 +216,7 @@ export const Categories = () => {
         </div>
       )}
 
-      {/* Add / Edit Category Modal */}
+      {/* Category Modal */}
       <CategoryModal
         isOpen={isModalOpen}
         onClose={() => {
@@ -217,9 +234,8 @@ export const Categories = () => {
         onClose={() => setDeletingCategory(null)}
         onConfirm={handleDeleteCategory}
         title="Delete Category"
-        message={`Are you sure you want to delete the category "${deletingCategory?.name}"? Any tasks linked to it will become unassigned.`}
+        message={`Are you sure you want to delete category "${deletingCategory?.name}"? Tasks assigned to this category will become unassigned.`}
         confirmText="Delete Category"
-        isDanger={true}
         isLoading={isSubmitting}
       />
     </div>
