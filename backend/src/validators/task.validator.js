@@ -4,7 +4,8 @@ const categoryIdPreprocessor = (val) => {
   if (val === '' || val === undefined || val === 'null' || val === null) {
     return null;
   }
-  return val;
+  const parsed = Number(val);
+  return isNaN(parsed) ? val : parsed;
 };
 
 const createTaskSchema = z.object({
@@ -27,7 +28,12 @@ const createTaskSchema = z.object({
     .default('PENDING'),
   categoryId: z.preprocess(
     categoryIdPreprocessor,
-    z.string().uuid('Invalid category ID format').nullable().optional()
+    z
+      .number({ invalid_type_error: 'Invalid category ID format' })
+      .int()
+      .positive('Category ID must be a positive integer')
+      .nullable()
+      .optional()
   )
 });
 
@@ -51,7 +57,12 @@ const updateTaskSchema = z.object({
     .optional(),
   categoryId: z.preprocess(
     categoryIdPreprocessor,
-    z.string().uuid('Invalid category ID format').nullable().optional()
+    z
+      .number({ invalid_type_error: 'Invalid category ID format' })
+      .int()
+      .positive('Category ID must be a positive integer')
+      .nullable()
+      .optional()
   )
 });
 

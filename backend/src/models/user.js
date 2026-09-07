@@ -28,8 +28,8 @@ module.exports = (sequelize, DataTypes) => {
   User.init(
     {
       id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
         primaryKey: true,
         allowNull: false
       },

@@ -19,8 +19,8 @@ module.exports = (sequelize, DataTypes) => {
   Task.init(
     {
       id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
         primaryKey: true,
         allowNull: false
       },
@@ -41,7 +41,7 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: 'PENDING'
       },
       userId: {
-        type: DataTypes.UUID,
+        type: DataTypes.INTEGER,
         allowNull: false,
         references: {
           model: 'Users',
@@ -49,7 +49,7 @@ module.exports = (sequelize, DataTypes) => {
         }
       },
       categoryId: {
-        type: DataTypes.UUID,
+        type: DataTypes.INTEGER,
         allowNull: true,
         references: {
           model: 'Categories',

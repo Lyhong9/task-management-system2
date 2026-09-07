@@ -2,10 +2,10 @@
 
 const bcrypt = require('bcryptjs');
 
-const DEMO_USER_ID = '11111111-1111-4111-8111-111111111111';
-const CAT_WORK_ID = '22222222-2222-4222-8222-222222222222';
-const CAT_DESIGN_ID = '33333333-3333-4333-8333-333333333333';
-const CAT_PERSONAL_ID = '44444444-4444-4444-8444-444444444444';
+const DEMO_USER_ID = 1;
+const CAT_WORK_ID = 1;
+const CAT_DESIGN_ID = 2;
+const CAT_PERSONAL_ID = 3;
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -54,7 +54,7 @@ module.exports = {
     // 3. Insert Tasks
     await queryInterface.bulkInsert('Tasks', [
       {
-        id: '55555555-5555-4555-8555-555555555551',
+        id: 1,
         title: 'Complete homepage UI',
         description: 'Design responsive layout with modern glassmorphism and clear KPI cards.',
         status: 'PENDING',
@@ -64,7 +64,7 @@ module.exports = {
         updatedAt: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 3)
       },
       {
-        id: '55555555-5555-4555-8555-555555555552',
+        id: 2,
         title: 'Build authentication & JWT security',
         description: 'Implement token issuance, bcrypt password hashing, and user ownership middleware.',
         status: 'COMPLETED',
@@ -74,7 +74,7 @@ module.exports = {
         updatedAt: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 2)
       },
       {
-        id: '55555555-5555-4555-8555-555555555553',
+        id: 3,
         title: 'Create API documentation',
         description: 'Document endpoints, request parameters, validation rules, and error codes in README.',
         status: 'PENDING',
@@ -84,7 +84,7 @@ module.exports = {
         updatedAt: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 1)
       },
       {
-        id: '55555555-5555-4555-8555-555555555554',
+        id: 4,
         title: 'Setup PostgreSQL database and migrations',
         description: 'Configure Sequelize models, associations, and migration scripts.',
         status: 'COMPLETED',
@@ -94,7 +94,7 @@ module.exports = {
         updatedAt: new Date(now.getTime() - 1000 * 60 * 60 * 12)
       },
       {
-        id: '55555555-5555-4555-8555-555555555555',
+        id: 5,
         title: 'Plan weekly groceries and exercise',
         description: 'Prepare meal plans and schedule morning workouts for the week.',
         status: 'PENDING',
@@ -104,6 +104,11 @@ module.exports = {
         updatedAt: now
       }
     ]);
+
+    // Reset Postgres sequences so subsequent auto-increment insertions start correctly after max ID
+    await queryInterface.sequelize.query(`SELECT setval(pg_get_serial_sequence('"Users"', 'id'), coalesce(max(id), 1)) FROM "Users";`);
+    await queryInterface.sequelize.query(`SELECT setval(pg_get_serial_sequence('"Categories"', 'id'), coalesce(max(id), 1)) FROM "Categories";`);
+    await queryInterface.sequelize.query(`SELECT setval(pg_get_serial_sequence('"Tasks"', 'id'), coalesce(max(id), 1)) FROM "Tasks";`);
   },
 
   async down(queryInterface, Sequelize) {
