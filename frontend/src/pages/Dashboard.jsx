@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CheckSquare,
@@ -7,49 +7,43 @@ import {
   FolderTree,
   Plus,
   ArrowRight,
-  TrendingUp,
-  Sparkles
+  TrendingUp
 } from 'lucide-react';
-import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { LoadingSpinner, ErrorState } from '../components/States';
 import { TaskModal } from '../features/tasks/TaskModal';
+import { useTasksQuery, useCreateTaskMutation, useUpdateTaskMutation } from '../hooks/useTasksQuery';
+import { useCategoriesQuery } from '../hooks/useCategoriesQuery';
 
 export const Dashboard = () => {
   const { user } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [tasks, setTasks] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fetchDashboardData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [tasksRes, categoriesRes] = await Promise.all([
-        api.getTasks({ sortBy: 'createdAt', order: 'DESC' }),
-        api.getCategories()
-      ]);
+  // TanStack Queries
+  const {
+    data: tasks = [],
+    isLoading: tasksLoading,
+    error: tasksError,
+    refetch: refetchTasks
+  } = useTasksQuery({ sortBy: 'createdAt', order: 'DESC' });
 
-      if (tasksRes.success) setTasks(tasksRes.data || []);
-      if (categoriesRes.success) setCategories(categoriesRes.data || []);
-    } catch (err) {
-      console.error('Failed to load dashboard data:', err);
-      setError(err.message || 'Failed to load dashboard data');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const {
+    data: categories = [],
+    isLoading: categoriesLoading,
+    error: categoriesError,
+    refetch: refetchCategories
+  } = useCategoriesQuery();
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
+  // TanStack Mutations
+  const updateTaskMutation = useUpdateTaskMutation();
+  const createTaskMutation = useCreateTaskMutation();
+
+  const loading = tasksLoading || categoriesLoading;
+  const error = tasksError || categoriesError;
 
   // Compute metrics
   const totalTasks = tasks.length;
@@ -61,44 +55,38 @@ export const Dashboard = () => {
   const handleToggleStatus = async (task) => {
     const newStatus = task.status === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
     try {
-      const res = await api.updateTask(task.id, { status: newStatus });
-      if (res.success) {
-        setTasks((prev) =>
-          prev.map((t) => (t.id === task.id ? res.data : t))
-        );
-        showToast(
-          newStatus === 'COMPLETED' ? 'Task marked completed!' : 'Task set to pending',
-          'success'
-        );
-      }
+      await updateTaskMutation.mutateAsync({ id: task.id, status: newStatus });
+      showToast(
+        newStatus === 'COMPLETED' ? 'Task marked completed!' : 'Task set to pending',
+        'success'
+      );
     } catch (err) {
       showToast(err.message || 'Failed to update task status', 'error');
     }
   };
 
   const handleCreateTask = async (taskData) => {
-    setIsSubmitting(true);
     try {
-      const res = await api.createTask(taskData);
-      if (res.success) {
-        setTasks((prev) => [res.data, ...prev]);
-        showToast('Task created successfully!', 'success');
-        setIsTaskModalOpen(false);
-      }
+      await createTaskMutation.mutateAsync(taskData);
+      showToast('Task created successfully!', 'success');
+      setIsTaskModalOpen(false);
     } catch (err) {
       showToast(err.message || 'Failed to create task', 'error');
       throw err;
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
+  const handleRetry = () => {
+    refetchTasks();
+    refetchCategories();
+  };
+
   if (loading) {
-    return <LoadingSpinner text="Loading dashboard metrics..." />;
+    return <LoadingSpinner text="Loading dashboard metrics with TanStack Query..." />;
   }
 
   if (error) {
-    return <ErrorState message={error} onRetry={fetchDashboardData} />;
+    return <ErrorState message={error.message || 'Failed to load dashboard data'} onRetry={handleRetry} />;
   }
 
   return (
@@ -266,6 +254,7 @@ export const Dashboard = () => {
                   type="button"
                   className={`task-checkbox-btn ${task.status === 'COMPLETED' ? 'checked' : ''}`}
                   onClick={() => handleToggleStatus(task)}
+                  disabled={updateTaskMutation.isPending}
                   aria-label={task.status === 'COMPLETED' ? 'Mark pending' : 'Mark completed'}
                 >
                   <CheckCircle2 size={20} />
@@ -319,7 +308,7 @@ export const Dashboard = () => {
         onClose={() => setIsTaskModalOpen(false)}
         onSubmit={handleCreateTask}
         categories={categories}
-        isLoading={isSubmitting}
+        isLoading={createTaskMutation.isPending}
       />
     </div>
   );

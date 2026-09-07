@@ -1,7 +1,7 @@
-const BASE_URL = '/api';
+import axios from 'axios';
 
-class ApiError extends Error {
-  constructor(message, status, errors = null) {
+export class ApiError extends Error {
+  constructor(message, status = 500, errors = null) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
@@ -9,11 +9,11 @@ class ApiError extends Error {
   }
 }
 
-const getAuthToken = () => {
+export const getAuthToken = () => {
   return localStorage.getItem('taskflow_token');
 };
 
-const setAuthToken = (token) => {
+export const setAuthToken = (token) => {
   if (token) {
     localStorage.setItem('taskflow_token', token);
   } else {
@@ -21,83 +21,74 @@ const setAuthToken = (token) => {
   }
 };
 
-const request = async (endpoint, options = {}) => {
-  const url = `${BASE_URL}${endpoint}`;
-  const token = getAuthToken();
-
-  const headers = {
-    'Content-Type': 'application/json',
-    ...options.headers
-  };
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+// Create Axios Instance
+export const apiClient = axios.create({
+  baseURL: '/api',
+  headers: {
+    'Content-Type': 'application/json'
   }
+});
 
-  const config = {
-    ...options,
-    headers
-  };
-
-  if (options.body && typeof options.body === 'object') {
-    config.body = JSON.stringify(options.body);
-  }
-
-  try {
-    const response = await fetch(url, config);
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      throw new ApiError(
-        data.message || `Request failed with status ${response.status}`,
-        response.status,
-        data.errors || null
-      );
+// Request Interceptor: inject Bearer Token
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = getAuthToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-    return data;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
+// Response Interceptor: unwrap response data & normalize errors
+apiClient.interceptors.response.use(
+  (response) => {
+    return response.data;
+  },
+  (error) => {
+    if (error.response) {
+      const { status, data } = error.response;
+      const message = data?.message || `Request failed with status ${status}`;
+      const errors = data?.errors || null;
+      return Promise.reject(new ApiError(message, status, errors));
     }
-    throw new ApiError(error.message || 'Network error occurred', 500);
+    return Promise.reject(new ApiError(error.message || 'Network communication error', 500));
   }
-};
+);
 
 export const api = {
   getAuthToken,
   setAuthToken,
 
   // Auth endpoints
-  login: (credentials) => request('/auth/login', { method: 'POST', body: credentials }),
-  register: (userData) => request('/auth/register', { method: 'POST', body: userData }),
-  getMe: () => request('/auth/me', { method: 'GET' }),
-  forgotPassword: (data) => request('/auth/forgot-password', { method: 'POST', body: data }),
-  verifyResetToken: (token) => request(`/auth/verify-reset-token?token=${encodeURIComponent(token)}`, { method: 'GET' }),
-  resetPassword: (data) => request('/auth/reset-password', { method: 'POST', body: data }),
-
+  login: (credentials) => apiClient.post('/auth/login', credentials),
+  register: (userData) => apiClient.post('/auth/register', userData),
+  getMe: () => apiClient.get('/auth/me'),
+  forgotPassword: (data) => apiClient.post('/auth/forgot-password', data),
+  verifyResetToken: (token) => apiClient.get('/auth/verify-reset-token', { params: { token } }),
+  resetPassword: (data) => apiClient.post('/auth/reset-password', data),
 
   // Tasks endpoints
   getTasks: (params = {}) => {
-    const query = new URLSearchParams();
-    if (params.status && params.status !== 'ALL') query.append('status', params.status);
-    if (params.categoryId) query.append('categoryId', params.categoryId);
-    if (params.sortBy) query.append('sortBy', params.sortBy);
-    if (params.order) query.append('order', params.order);
-    if (params.search) query.append('search', params.search);
+    const cleanParams = {};
+    if (params.status && params.status !== 'ALL') cleanParams.status = params.status;
+    if (params.categoryId) cleanParams.categoryId = params.categoryId;
+    if (params.sortBy) cleanParams.sortBy = params.sortBy;
+    if (params.order) cleanParams.order = params.order;
+    if (params.search) cleanParams.search = params.search;
 
-    const queryString = query.toString();
-    return request(`/tasks${queryString ? `?${queryString}` : ''}`, { method: 'GET' });
+    return apiClient.get('/tasks', { params: cleanParams });
   },
-  getTaskById: (id) => request(`/tasks/${id}`, { method: 'GET' }),
-  createTask: (taskData) => request('/tasks', { method: 'POST', body: taskData }),
-  updateTask: (id, taskData) => request(`/tasks/${id}`, { method: 'PATCH', body: taskData }),
-  deleteTask: (id) => request(`/tasks/${id}`, { method: 'DELETE' }),
+  getTaskById: (id) => apiClient.get(`/tasks/${id}`),
+  createTask: (taskData) => apiClient.post('/tasks', taskData),
+  updateTask: (id, taskData) => apiClient.patch(`/tasks/${id}`, taskData),
+  deleteTask: (id) => apiClient.delete(`/tasks/${id}`),
 
   // Categories endpoints
-  getCategories: () => request('/categories', { method: 'GET' }),
-  getCategoryById: (id) => request(`/categories/${id}`, { method: 'GET' }),
-  createCategory: (categoryData) => request('/categories', { method: 'POST', body: categoryData }),
-  updateCategory: (id, categoryData) => request(`/categories/${id}`, { method: 'PATCH', body: categoryData }),
-  deleteCategory: (id) => request(`/categories/${id}`, { method: 'DELETE' })
+  getCategories: () => apiClient.get('/categories'),
+  getCategoryById: (id) => apiClient.get(`/categories/${id}`),
+  createCategory: (categoryData) => apiClient.post('/categories', categoryData),
+  updateCategory: (id, categoryData) => apiClient.patch(`/categories/${id}`, categoryData),
+  deleteCategory: (id) => apiClient.delete(`/categories/${id}`)
 };
