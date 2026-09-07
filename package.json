@@ -1,0 +1,17 @@
+{
+  "name": "task-management-system2",
+  "version": "1.0.0",
+  "description": "Full-Stack Task Management System with Express, PostgreSQL, Sequelize, and React",
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev": "concurrently -n \"backend,frontend\" -c \"blue,green\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install",
+    "migrate": "npm --prefix backend run migrate",
+    "seed": "npm --prefix backend run seed",
+    "test:api": "npm --prefix backend run test:api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
