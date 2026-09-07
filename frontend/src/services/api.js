@@ -72,6 +72,10 @@ export const api = {
   login: (credentials) => request('/auth/login', { method: 'POST', body: credentials }),
   register: (userData) => request('/auth/register', { method: 'POST', body: userData }),
   getMe: () => request('/auth/me', { method: 'GET' }),
+  forgotPassword: (data) => request('/auth/forgot-password', { method: 'POST', body: data }),
+  verifyResetToken: (token) => request(`/auth/verify-reset-token?token=${encodeURIComponent(token)}`, { method: 'GET' }),
+  resetPassword: (data) => request('/auth/reset-password', { method: 'POST', body: data }),
+
 
   // Tasks endpoints
   getTasks: (params = {}) => {

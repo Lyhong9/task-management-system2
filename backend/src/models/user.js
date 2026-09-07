@@ -21,6 +21,8 @@ module.exports = (sequelize, DataTypes) => {
     toJSON() {
       const values = { ...this.get() };
       delete values.passwordHash;
+      delete values.resetPasswordToken;
+      delete values.resetPasswordExpires;
       return values;
     }
   }
@@ -51,6 +53,14 @@ module.exports = (sequelize, DataTypes) => {
       passwordHash: {
         type: DataTypes.STRING,
         allowNull: false
+      },
+      resetPasswordToken: {
+        type: DataTypes.STRING(64),
+        allowNull: true
+      },
+      resetPasswordExpires: {
+        type: DataTypes.DATE,
+        allowNull: true
       }
     },
     {

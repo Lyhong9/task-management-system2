@@ -134,7 +134,15 @@ export const Login = () => {
 
           {/* Password */}
           <div className="form-group">
-            <label className="form-label" htmlFor="login-password">Password</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <label className="form-label" htmlFor="login-password" style={{ marginBottom: 0 }}>Password</label>
+              <Link
+                to="/forgot-password"
+                style={{ fontSize: '12.5px', color: '#818cf8', textDecoration: 'none', fontWeight: 500 }}
+              >
+                Forgot password?
+              </Link>
+            </div>
             <div style={{ position: 'relative' }}>
               <input
                 id="login-password"

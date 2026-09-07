@@ -260,7 +260,73 @@ async function runTests() {
     assert.strictEqual(badToken.status, 401);
     console.log('  Passed!');
 
-    console.log('\n🎉 ALL 11 TEST SUITES PASSED SUCCESSFULLY!');
+    // 12. Forgot password request (valid user)
+    console.log('Test 12: Request password reset token');
+    const forgotRes = await request(server, 'POST', '/api/auth/forgot-password', {
+      email: userAEmail
+    });
+    assert.strictEqual(forgotRes.status, 200);
+    assert.strictEqual(forgotRes.body.success, true);
+    assert.ok(forgotRes.body.devToken, 'Should return devToken in non-production mode');
+    const rawResetToken = forgotRes.body.devToken;
+    console.log('  Passed! Reset token issued.');
+
+    // 13. Forgot password request (non-existent user, anti-enumeration)
+    console.log('Test 13: Anti-enumeration check on unknown email');
+    const unknownForgot = await request(server, 'POST', '/api/auth/forgot-password', {
+      email: 'nonexistent_user_9999@example.com'
+    });
+    assert.strictEqual(unknownForgot.status, 200);
+    assert.strictEqual(unknownForgot.body.success, true);
+    assert.strictEqual(unknownForgot.body.devToken, undefined);
+    console.log('  Passed! Secure generic response returned.');
+
+    // 14. Verify reset token
+    console.log('Test 14: Verify reset token validity');
+    const validVerify = await request(server, 'GET', `/api/auth/verify-reset-token?token=${rawResetToken}`);
+    assert.strictEqual(validVerify.status, 200);
+    assert.strictEqual(validVerify.body.valid, true);
+    assert.strictEqual(validVerify.body.email, userAEmail);
+
+    const badVerify = await request(server, 'GET', '/api/auth/verify-reset-token?token=invalid_token_12345');
+    assert.strictEqual(badVerify.status, 400);
+    assert.strictEqual(badVerify.body.valid, false);
+    console.log('  Passed! Token verification accurate.');
+
+    // 15. Reset password and verify login
+    console.log('Test 15: Reset password and verify login credentials');
+    const newSecretPassword = 'BrandNewPassword2026!';
+    const resetRes = await request(server, 'POST', '/api/auth/reset-password', {
+      token: rawResetToken,
+      password: newSecretPassword
+    });
+    assert.strictEqual(resetRes.status, 200);
+    assert.strictEqual(resetRes.body.success, true);
+
+    // Old password must fail
+    const oldLoginFail = await request(server, 'POST', '/api/auth/login', {
+      email: userAEmail,
+      password: 'Password123!'
+    });
+    assert.strictEqual(oldLoginFail.status, 401, 'Old password must no longer work');
+
+    // New password must succeed
+    const newLoginSuccess = await request(server, 'POST', '/api/auth/login', {
+      email: userAEmail,
+      password: newSecretPassword
+    });
+    assert.strictEqual(newLoginSuccess.status, 200, 'New password must log in successfully');
+    assert.ok(newLoginSuccess.body.token);
+
+    // Reusing the same reset token must fail
+    const reuseFail = await request(server, 'POST', '/api/auth/reset-password', {
+      token: rawResetToken,
+      password: 'AnotherPassword!'
+    });
+    assert.strictEqual(reuseFail.status, 400, 'Reset token must be single-use only');
+    console.log('  Passed! Full reset lifecycle and security verified.');
+
+    console.log('\n🎉 ALL 15 TEST SUITES PASSED SUCCESSFULLY!');
   } finally {
     server.close();
   }
