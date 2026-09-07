@@ -1,6 +1,7 @@
 import React from 'react';
 import { Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { ThemeToggle } from './ThemeToggle';
 
 export const Navbar = ({ mobileOpen, setMobileOpen }) => {
   const { user } = useAuth();
@@ -24,6 +25,10 @@ export const Navbar = ({ mobileOpen, setMobileOpen }) => {
             {user?.name || 'User'}
           </span>
         </div>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <ThemeToggle />
       </div>
     </header>
   );

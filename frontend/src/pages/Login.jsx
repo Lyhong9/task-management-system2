@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Sparkles, Mail, Lock, Eye, EyeOff, LogIn, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
@@ -44,24 +45,15 @@ export const Login = () => {
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        background: 'radial-gradient(ellipse at 50% 0%, rgba(99, 102, 241, 0.15) 0%, rgba(9, 13, 22, 1) 75%)'
-      }}
-    >
+    <div className="auth-page">
+      <ThemeToggle className="auth-theme-toggle" />
       <div
         className="card"
         style={{
           width: '100%',
           maxWidth: '440px',
           padding: '36px',
-          boxShadow: 'var(--shadow-lg)',
-          border: '1px solid rgba(255, 255, 255, 0.12)'
+          boxShadow: 'var(--shadow-lg)'
         }}
       >
         {/* Brand Header */}
