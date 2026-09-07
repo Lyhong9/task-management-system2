@@ -1,19 +1,9 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Menu, LogOut, Plus, Sparkles } from 'lucide-react';
+import { Menu, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
 
 export const Navbar = ({ onOpenTaskModal, mobileOpen, setMobileOpen }) => {
-  const { user, logout } = useAuth();
-  const { showToast } = useToast();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    showToast('Logged out successfully', 'info');
-    navigate('/login');
-  };
+  const { user } = useAuth();
 
   return (
     <header className="top-navbar">
@@ -48,31 +38,6 @@ export const Navbar = ({ onOpenTaskModal, mobileOpen, setMobileOpen }) => {
             <span>New Task</span>
           </button>
         )}
-
-        <div
-          style={{
-            height: 24,
-            width: 1,
-            background: 'var(--border-subtle)',
-            margin: '0 4px'
-          }}
-        />
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div className="user-avatar" style={{ width: 34, height: 34, fontSize: 13 }}>
-            {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-          </div>
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={handleLogout}
-            style={{ padding: '7px 10px', fontSize: '12.5px', color: '#f87171' }}
-            title="Logout"
-          >
-            <LogOut size={16} />
-            <span>Logout</span>
-          </button>
-        </div>
       </div>
     </header>
   );
